@@ -1,4 +1,10 @@
 package com.example.springparc.service.impl;
 
-public class TbpostServiceImpl {
+import com.example.springparc.service.TbpostService;
+import org.springframework.stereotype.Service;
+
+@Service
+public class TbpostServiceImpl implements TbpostService {
+
+    private final
 }

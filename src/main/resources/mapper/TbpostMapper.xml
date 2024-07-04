@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0/EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.springparc.mapper.TbpostMapper">
+<mapper namespace="com.thc.realspr.mapper.TbpostMapper">
 
-	<select id="detail" parameterType="hashMap" resultType="com.example.springparc.dto.TbpostDto$SelectResDto">
+	<select id="detail" parameterType="hashMap" resultType="com.thc.realspr.dto.TbpostDto$SelectResDto">
 		SELECT tbpost.id
-			 ,tbpost.deleted
-			 ,tbpost.created_at as createdAt
-			 ,tbpost.modified_at as modifiedAt
-			 ,tbpost.title
-			 ,tbpost.cate
-			 ,tbpost.mpic
-			 ,tbpost.content
+			,tbpost.deleted
+			,tbpost.created_at as createdAt
+			,tbpost.modified_at as modifiedAt
+			,tbpost.title
+			,tbpost.cate
+			,tbpost.mpic
+			,tbpost.content
 		FROM tbpost
 		WHERE tbpost.id = #{id}
 	</select>
-	<select id="list" parameterType="hashMap" resultType="com.example.springparc.dto.TbpostDto$SelectResDto">
+	<select id="list" parameterType="hashMap" resultType="com.thc.realspr.dto.TbpostDto$SelectResDto">
 		SELECT tbpost.id
 		FROM tbpost
 		WHERE tbpost.id is not NULL
@@ -23,7 +23,7 @@
 		ORDER BY tbpost.created_at DESC;
 	</select>
 
-	<select id="moreList" parameterType="hashMap" resultType="com.example.springparc.dto.TbpostDto$SelectResDto">
+	<select id="moreList" parameterType="hashMap" resultType="com.thc.realspr.dto.TbpostDto$SelectResDto">
 		SELECT tbpost.id
 		FROM tbpost
 		WHERE tbpost.id is not NULL
@@ -48,7 +48,7 @@
 		</if>
 		LIMIT 0, #{perpage}
 	</select>
-	<select id="pagedList" parameterType="hashMap" resultType="com.example.springparc.dto.TbpostDto$SelectResDto">
+	<select id="pagedList" parameterType="hashMap" resultType="com.thc.realspr.dto.TbpostDto$SelectResDto">
 		SELECT tbpost.id
 		FROM tbpost
 		WHERE tbpost.id is not NULL

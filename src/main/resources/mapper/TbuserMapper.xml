@@ -4,15 +4,15 @@
 
 	<select id="detail" parameterType="hashMap" resultType="com.thc.realspr.dto.TbuserDto$SelectResDto">
 		SELECT tbuser.id
-			 ,tbuser.deleted
-			 ,tbuser.created_at as createdAt
-			 ,tbuser.modified_at as modifiedAt
-			 ,tbuser.username
-			 ,tbuser.name
-			 ,tbuser.nick
-			 ,tbuser.phone
-			 ,tbuser.mpic
-			 ,tbuser.content
+			,tbuser.deleted
+			,tbuser.created_at as createdAt
+			,tbuser.modified_at as modifiedAt
+			,tbuser.username
+			,tbuser.name
+			,tbuser.nick
+			,tbuser.phone
+			,tbuser.mpic
+			,tbuser.content
 		FROM tbuser
 		WHERE tbuser.id = #{id}
 	</select>

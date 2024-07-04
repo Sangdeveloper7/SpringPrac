@@ -1,6 +1,8 @@
 package com.example.springparc.controller;
 
 
+import com.example.springparc.dto.CommonDto;
+import com.example.springparc.dto.TbpostDto;
 import com.example.springparc.service.TbpostService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -13,7 +15,7 @@ import java.util.List;
 
 @RequestMapping("/api/tbpost")
 @RestController
-public class TbpostController {
+public class TbpostRestController {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 

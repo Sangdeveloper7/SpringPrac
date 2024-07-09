@@ -14,12 +14,12 @@ import javax.sql.DataSource;
 @Configuration
 @MapperScan(basePackages={"com.thc.realspr.mapper"}, sqlSessionFactoryRef="sqlSessionFactory")
 public class MybatisConfig {
-    @Bean(name="sqlSessionFactory")
-    public SqlSessionFactory sqlSessionFactory(@Qualifier("dataSource") DataSource dataSource) throws Exception {
-        SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
-        sqlSessionFactoryBean.setDataSource(dataSource);
-        sqlSessionFactoryBean.setTypeAliasesPackage("com.thc.realspr.dto");
-        sqlSessionFactoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath:/mapper/*.xml"));
-        return sqlSessionFactoryBean.getObject();
-    }
+	@Bean(name="sqlSessionFactory")
+	public SqlSessionFactory sqlSessionFactory(@Qualifier("dataSource") DataSource dataSource) throws Exception {
+		SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
+		sqlSessionFactoryBean.setDataSource(dataSource);
+		sqlSessionFactoryBean.setTypeAliasesPackage("com.thc.realspr.dto");
+		sqlSessionFactoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath:/mapper/*.xml"));
+		return sqlSessionFactoryBean.getObject();
+	}
 }

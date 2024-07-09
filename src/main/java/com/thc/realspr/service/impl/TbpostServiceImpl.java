@@ -8,7 +8,6 @@ import com.thc.realspr.repository.TbpostRepository;
 import com.thc.realspr.service.TbpostService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -20,8 +19,6 @@ public class TbpostServiceImpl implements TbpostService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final TbpostRepository tbpostRepository;
-
-    @Autowired
     private final TbpostMapper tbpostMapper;
     public TbpostServiceImpl(
             TbpostRepository tbpostRepository

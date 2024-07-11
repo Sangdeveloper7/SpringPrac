@@ -1,5 +1,6 @@
 package com.thc.realspr.controller;
 
+import com.thc.realspr.dto.CommonDto;
 import com.thc.realspr.util.FileUpload;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,6 +18,14 @@ import java.io.IOException;
 @RequestMapping("/api/default")
 @RestController
 public class DefaultRestController {
+ 
+    private final FileUpload fileUpload;
+    public DefaultRestController(
+            FileUpload fileUpload
+    ) {
+        this.fileUpload = fileUpload;
+    }
+
     @Operation(summary = "파일업로드",
             description = "파일을 서버에 업로드(일반) \n"
                     + "@param MultipartFile multipartFile \n"
@@ -24,14 +33,15 @@ public class DefaultRestController {
                     + "@exception \n"
     )
     @PostMapping("/uploadFile")
-    public ResponseEntity<String> uploadFile(@Valid @RequestParam("file") MultipartFile file, HttpServletRequest request) {
-        String returnValue = null;
+    public ResponseEntity<CommonDto.UrlResDto> uploadFile(@Valid @RequestParam("file") MultipartFile file, HttpServletRequest request) {
+        CommonDto.UrlResDto urlResDto = null;
         try {
-            //returnValue = FileUpload.s3(file);
-            returnValue = FileUpload.local(file, request);
+            //FileUpload fileUpload = new FileUpload();
+            urlResDto = CommonDto.UrlResDto.builder().url(fileUpload.s3(file)).build();
+            //returnValue = FileUpload.local(file, request);
         } catch (IOException e) {
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(returnValue);
+        return ResponseEntity.status(HttpStatus.CREATED).body(urlResDto);
     }
 
 }

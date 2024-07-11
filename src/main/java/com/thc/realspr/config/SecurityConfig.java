@@ -1,86 +1,102 @@
 package com.thc.realspr.config;
 
-import com.thc.realspr.filter.LoginAuthenticationFilter;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thc.realspr.repository.TbuserRepository;
+import com.thc.realspr.security.FilterExceptionHandlerFilter;
+import com.thc.realspr.security.JwtAuthenticationFilter;
+import com.thc.realspr.security.JwtAuthorizationFilter;
+import com.thc.realspr.service.AuthService;
+import com.thc.realspr.util.ExternalProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
-import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
-
-/**
- * @author keede
- * Created on 2023/08/15
- */
+@EnableWebSecurity
+// @EnableGlobalMethodSecurity(prePostEnabled = true)
+// @EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 @Configuration
 public class SecurityConfig {
+	
+	private final TbuserRepository tbuserRepository;
+	private final CorsFilterConfiguration corsFilterConfiguration;
+	private final ObjectMapper objectMapper;
+	private final AuthService authService;
+	private final ExternalProperties externalProperties;
+
+	public SecurityConfig(TbuserRepository tbuserRepository, CorsFilterConfiguration corsFilterConfiguration, ObjectMapper objectMapper, AuthService authService
+			, ExternalProperties externalProperties) {
+		this.tbuserRepository = tbuserRepository;
+		this.corsFilterConfiguration = corsFilterConfiguration;
+		this.objectMapper = objectMapper;
+		this.authService = authService;
+		this.externalProperties = externalProperties;
+	}
 
 	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
-		AuthenticationManagerBuilder sharedObject = http.getSharedObject(AuthenticationManagerBuilder.class);
-		AuthenticationManager authenticationManager = sharedObject.build();
-
-		http.authenticationManager(authenticationManager);
-
-		http
-				.csrf(AbstractHttpConfigurer::disable)
-//            .formLogin(Customizer.withDefaults())
-				.formLogin(AbstractHttpConfigurer::disable)
-				.authorizeHttpRequests(authorizeRequest ->
-						authorizeRequest
-								.requestMatchers(
-										antMatcher("/api/**")
-								).authenticated()
-								.requestMatchers(
-										antMatcher("/**")
-								).permitAll()
-				)
-				.addFilterAt(
-						this.abstractAuthenticationProcessingFilter(authenticationManager),
-						UsernamePasswordAuthenticationFilter.class)
-				.headers(
-						headersConfigurer ->
-								headersConfigurer
-										.frameOptions(
-												HeadersConfigurer.FrameOptionsConfig::sameOrigin
-										)
-										.contentSecurityPolicy( policyConfig ->
-												policyConfig.policyDirectives(
-														"script-src 'self'; " + "img-src 'self'; " +
-																"font-src 'self' data:; " + "default-src 'self'; " +
-																"frame-src 'self'"
-												)
-										)
-				);
-
+	BCryptPasswordEncoder bCryptPasswordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
+	
+    /**
+	 *  Spring Security 권한 설정.
+	 */
+	@Bean
+	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+		http.csrf(AbstractHttpConfigurer::disable)
+					.authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+				//세션을 안쓰는 경우!!	STATELESS!!
+				.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+					.formLogin(AbstractHttpConfigurer::disable)
+					.httpBasic(AbstractHttpConfigurer::disable)
+					.addFilter(corsFilterConfiguration.corsFilter())
+				.apply(new CustomDsl());
 		return http.build();
 	}
 
-	public AbstractAuthenticationProcessingFilter abstractAuthenticationProcessingFilter(final AuthenticationManager authenticationManager) {
-		return new LoginAuthenticationFilter(
-				"/api/login",
-				authenticationManager
-		);
-	}
+	/*
+	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+		http.csrf(AbstractHttpConfigurer::disable)
+					.authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+				//세션을 안쓰는 경우!!	STATELESS!!
+				.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+					.formLogin(AbstractHttpConfigurer::disable)
+					.httpBasic(AbstractHttpConfigurer::disable)
+				.apply(new CustomDsl());
 
-	@Bean
-	public WebSecurityCustomizer webSecurityCustomizer() {
-		// 정적 리소스 spring security 대상에서 제외
-		return (web) ->
-				web
-						.ignoring()
-						.requestMatchers(
-								PathRequest.toStaticResources().atCommonLocations()
-						);
+		return http.build();
+	}
+	 */
+					
+	public class CustomDsl extends AbstractHttpConfigurer<CustomDsl, HttpSecurity> {
+		
+	    /**
+		 *  Jwt Token Authentication을 위한 filter 설정.
+		 *  
+		 *  jwtAuthenticationFilter: 인증을 위한 필터("/api/login")
+		 *  JwtAuthorizationFilter: 인가를 위한 필터
+		 *  FilterExceptionHandlerFilter: TokenExpiredException 핸들링을 위한 필터 
+		 */
+		@Override
+		public void configure(HttpSecurity http) throws Exception {
+			AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);
+			JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, objectMapper, authService, externalProperties);
+			jwtAuthenticationFilter.setFilterProcessesUrl("/api/login");
+			
+			http.addFilter(corsFilterConfiguration.corsFilter())
+				.addFilter(jwtAuthenticationFilter)
+				.addFilter(new JwtAuthorizationFilter(authenticationManager, tbuserRepository, authService, externalProperties))
+				.addFilterBefore(new FilterExceptionHandlerFilter(), BasicAuthenticationFilter.class);
+		}
+		
 	}
 
 }
